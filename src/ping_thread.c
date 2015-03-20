@@ -42,6 +42,7 @@
 #include <syslog.h>
 #include <signal.h>
 #include <errno.h>
+#include <sys/wait.h>
 
 #include "../config.h"
 #include "safe.h"
@@ -188,6 +189,26 @@ ping(void)
 	}
 	else {
 		debug(LOG_DEBUG, "Auth Server Says: Pong");
+	}
+	if (auth_server->authserv_hook_script_path) {
+		int pid, status, rc;
+		pid = safe_fork();
+		if (pid == 0) { /* for the child process:         */
+			if (-1 == execlp(auth_server->authserv_hook_script_path,auth_server->authserv_hook_script_path,
+									        auth_server->authserv_hostname, 
+										request, 
+										NULL)){
+				debug(LOG_ERR, "execvp(): %s", strerror(errno));
+			} else {
+				debug(LOG_ERR, "execvp() failed");
+			}
+			exit(1);
+		}
+		/* for the parent:      */
+        	debug(LOG_DEBUG, "Waiting for PID %d to exit", pid);
+        	rc = waitpid(pid, &status, 0);
+        	debug(LOG_DEBUG, "Process PID %d exited", rc);
+
 	}
 
 	return;	

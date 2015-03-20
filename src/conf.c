@@ -84,6 +84,7 @@ typedef enum {
 	oAuthServMsgScriptPathFragment,
 	oAuthServPingScriptPathFragment,
 	oAuthServAuthScriptPathFragment,
+	oAuthServHookScriptPath,
 	oHTTPDMaxConn,
 	oHTTPDName,
 	oHTTPDRealm,
@@ -135,6 +136,7 @@ static const struct {
 	{ "msgscriptpathfragment",	oAuthServMsgScriptPathFragment },
 	{ "pingscriptpathfragment",	oAuthServPingScriptPathFragment },
 	{ "authscriptpathfragment",	oAuthServAuthScriptPathFragment },
+	{ "hookscriptpath", 		oAuthServHookScriptPath},
 	{ "firewallruleset",		oFirewallRuleSet },
 	{ "firewallrule",		oFirewallRule },
 	{ "trustedmaclist",		oTrustedMACList },
@@ -234,6 +236,7 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 			*msgscriptpathfragment = NULL,
 			*pingscriptpathfragment = NULL,
 			*authscriptpathfragment = NULL,
+			*hookscriptpath = NULL,
 			line[MAX_BUF],
 			*p1,
 			*p2;
@@ -335,6 +338,9 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 					if (ssl_available < 0)
 						ssl_available = 0;
 					break;
+				case oAuthServHookScriptPath:
+					hookscriptpath = safe_strdup(p2);
+					break;
 				case oBadOption:
 				default:
 					debug(LOG_ERR, "Bad option on line %d "
@@ -369,6 +375,7 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 	new->authserv_auth_script_path_fragment = authscriptpathfragment;  
 	new->authserv_http_port = http_port;
 	new->authserv_ssl_port = ssl_port;
+	new->authserv_hook_script_path = hookscriptpath;
 	
 	/* If it's the first, add to config, else append to last server */
 	if (config.auth_servers == NULL) {
